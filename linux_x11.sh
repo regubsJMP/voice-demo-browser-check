@@ -34,4 +34,8 @@ pk L1-plain-cancel 6 esc
 pk L2-plain-choose 6 choose
 pk L3-demofix-cancel d esc
 pk L4-demofix-choose d choose
+# browser zoom (Ctrl +) and CSS zoom — zoom.html logs units, container queries and coordinates on every resize
+xdotool key ctrl+l; sleep 0.4; xdotool type --delay 15 "http://localhost:8100/zoom.html"; xdotool key Return; sleep 3; shot Z-100
+for i in 1 2 3; do xdotool key ctrl+plus; sleep 2; shot "Z-in$i"; done
+xdotool key ctrl+0; sleep 2; shot Z-reset
 sleep 1; echo "== page log"; cat /out/page-log.txt

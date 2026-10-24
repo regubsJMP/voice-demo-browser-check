@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zoom probe</title>
+<!-- Browser zoom (Cmd/Ctrl +) and CSS zoom probe (24.10). On load: how vh / vw / font size, container queries and getBoundingClientRect behave
+     inside an element with CSS zoom 0.6 (the demo site scales whole screens down this way when the browser zoom makes the window narrow), and a
+     visual check — a fixed-position frame is put at the coordinates getBoundingClientRect gives for a box inside the zoomed element: on the
+     screenshot the frame must sit exactly on the box. Then every resize (browser zoom fires one) logs innerWidth / innerHeight, devicePixelRatio
+     and outerWidth / innerWidth (an estimate of the browser zoom). Log lines also go to the server (serve.py → page-log.txt). -->
+<style>
+  html, body { margin: 0; background: #12324a; color: #fff; font: 18px/1.35 -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  main { padding: 20px 28px; }
+  h1 { margin: 0 0 6px; font-size: 26px; }
+  #z { zoom: 0.6; container-type: inline-size; position: relative; height: 330px; background: #1d4a6b; margin-top: 10px; }
+  #vh { position: absolute; left: 0; top: 0; width: 8px; height: 100vh; background: #e33; }
+  #vw { position: absolute; left: 20px; top: 0; width: 50vw; height: 8px; background: #39f; }
+  #fs { position: absolute; left: 20px; top: 20px; font-size: 40px; line-height: 1; }
+  #cq { position: absolute; left: 20px; top: 80px; width: 40px; height: 40px; background: #888; }
+  @container (min-width: 1500px) { #cq { background: #2e9a4b; } }
+  #box { position: absolute; left: 600px; top: 160px; width: 300px; height: 150px; background: #f5c542; color: #222; display: grid; place-items: center; font-size: 30px; }
+  #mark { position: fixed; border: 4px solid #e33; pointer-events: none; z-index: 5; }
+  #mark2 { position: fixed; border: 4px dashed #6f6; pointer-events: none; z-index: 5; }
+  #st { margin-top: 12px; font: 16px/1.45 ui-monospace, Menlo, monospace; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<main>
+  <h1>zoom probe</h1>
+  <div>red frame = getBoundingClientRect of the yellow box · green dashed = the same divided by currentCSSZoom-free estimate</div>
+  <div id="z"><div id="vh"></div><div id="vw"></div><div id="fs">Text 40px</div><div id="cq"></div><div id="box">target</div></div>
+  <div id="st"></div>
+</main>
+<div id="mark"></div><div id="mark2"></div>
+<script>
+  const st = document.getElementById('st'), t0 = performance.now(), log = [];
+  const L = (m) => { const line = ((performance.now() - t0) / 1000).toFixed(1).padStart(5) + ' s  ' + m; log.push(line);
+    st.textContent = log.slice(-14).reverse().join('\n'); document.title = 'zoom ' + m;
+    try { navigator.sendBeacon('/log', line); } catch (e) { /* no server */ } };
+  const r = (id) => document.getElementById(id).getBoundingClientRect();
+  const env = (why) => L(`${why}: inner ${innerWidth}×${innerHeight} · dpr ${devicePixelRatio.toFixed(3)} · outer/inner ${(outerWidth / innerWidth).toFixed(3)}` +
+    ` · vv ${window.visualViewport ? visualViewport.scale.toFixed(2) : '-'}`);
+  function units() {
+    const z = document.getElementById('z'), vh = document.getElementById('vh');
+    L(`loaded · ${navigator.userAgent.replace(/^Mozilla\/5\.0 /, '')}`);
+    L(`in zoom 0.6: 100vh → ${Math.round(r('vh').height)} (window ${innerHeight}) · offsetHeight ${vh.offsetHeight} · 50vw → ${Math.round(r('vw').width)}` +
+      ` · 40px text → ${Math.round(r('fs').height)} · zoomed box width ${Math.round(r('z').width)} · currentCSSZoom ${vh.currentCSSZoom}`);
+    L(`container query (min-width: 1500px) on the zoomed box: ${getComputedStyle(document.getElementById('cq')).backgroundColor === 'rgb(46, 154, 75)' ? 'MATCHES' : 'no'}`);
+    const b = r('box'), m = document.getElementById('mark');
+    Object.assign(m.style, { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' });
+    // if rects come in the zoomed element's own units (seen in WebKit 18.2), visual = rect relative to the zoomed box × 0.6 + its origin
+    const zr = r('z'), m2 = document.getElementById('mark2'), k = 0.6;
+    Object.assign(m2.style, { left: (zr.left + (b.left - zr.left) * k) + 'px', top: (zr.top + (b.top - zr.top) * k) + 'px', width: b.width * k + 'px', height: b.height * k + 'px' });
+    L(`box rect ${Math.round(b.left)},${Math.round(b.top)} ${Math.round(b.width)}×${Math.round(b.height)} (css 600,160 300×150 in zoom 0.6)`);
+  }
+  addEventListener('load', () => { units(); env('load'); });
+  addEventListener('resize', () => { env('resize'); units(); });
+</script>
+</body>
+</html>
