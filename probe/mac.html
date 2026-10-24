@@ -13,6 +13,8 @@
          9 — as the demo site does: remember full screen, open the picker; on change / cancel — requestFullscreen if not in full screen
          0 — leave full screen FIRST (exitFullscreen), then open the picker in the same key press; on change / cancel — requestFullscreen
          4 — on change / cancel: if the document still says «full screen», leave and enter again; otherwise requestFullscreen
+         d — the demo site's fix after run 10: leave full screen first; on change / cancel requestFullscreen, and if that fails, the NEXT
+             real click or key enters full screen (if leaving is still in progress — check again 1.5 s later)
      After key 2, if full screen did not happen (the answer came after the ~5 s activation window), the NEXT real click or key anywhere
      enters full screen (the fallback used by the demo).
      5 — audio: play a clip on element A in this key press; 8 s later play another clip on A and on a new element B
@@ -71,7 +73,7 @@
   const nextGesture = (what) => { if (!fsWanted) return; fsWanted = false; L('next real ' + what + ' → full screen'); fs('next-' + what); };
   document.addEventListener('pointerdown', () => { L('pointerdown'); nextGesture('click'); }, true);
   document.addEventListener('keydown', (e) => {
-    if (!['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Escape'].includes(e.key)) nextGesture('key');
+    if (!['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'd', 'Escape'].includes(e.key)) nextGesture('key');
     if (e.key === '1') { L('key 1'); fs('1').then(() => mic('1')); }
     else if (e.key === '2') { L('key 2'); mic('2').then(() => fs('2')).then(() => { if (!isFs()) { fsWanted = true; L('2: full screen waits for the next real click or key'); } }); }
     else if (e.key === '3') { L('key 3'); fs('3'); }
@@ -84,10 +86,10 @@
     else if (e.key === '5') { L('key 5'); A.src = beep(660); play(A, '5 element A, in key press');
       setTimeout(() => { A.src = beep(880); play(A, '5 element A, new clip 8 s later'); play(new Audio(beep(440)), '5 NEW element B, 8 s later'); }, 8000); }
     else if (e.key === '6') { L('key 6: file picker, full screen ' + isFs()); pick = null; document.getElementById('f').click(); }
-    else if (e.key === '9' || e.key === '0' || e.key === '4') {
-      pick = { way: { 9: 'site', 0: 'exit-first', 4: 're-enter' }[e.key], was: isFs() };
+    else if (e.key === '9' || e.key === '0' || e.key === '4' || e.key === 'd') {
+      pick = { way: { 9: 'site', 0: 'exit-first', 4: 're-enter', d: 'demo fix' }[e.key], was: isFs() };
       L('key ' + e.key + ': file picker (' + pick.way + '), full screen ' + pick.was);
-      if (e.key === '0' && pick.was) { const x = document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen();
+      if ((e.key === '0' || e.key === 'd') && pick.was) { const x = document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen();
         Promise.resolve(x).then(() => L('0: left full screen'), (er) => L('0: exitFullscreen ' + er.name)); }
       const f = document.getElementById('f'); f.value = ''; f.click();
     }
@@ -98,6 +100,11 @@
     const p = pick; pick = null;
     setTimeout(() => L(ev + ' +2 s: full screen ' + isFs()), 2000);
     if (!p || !p.was) return;
+    if (p.way === 'demo fix') {
+      const later = () => { if (!isFs()) { fsWanted = true; L('back (demo fix): full screen waits for the next real click or key'); } };
+      if (isFs()) { L('back (demo fix): still leaving — check in 1.5 s'); setTimeout(later, 1500); return; }
+      fs('back (demo fix)').then(later); return;
+    }
     if (p.way === 're-enter' && isFs()) {
       const x = document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen();
       Promise.resolve(x).then(() => fs('back (' + p.way + ', after leaving)'), (er) => L('back: exitFullscreen ' + er.name));
