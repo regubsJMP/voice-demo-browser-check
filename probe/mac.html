@@ -55,6 +55,7 @@
   const A = new Audio();
   const play = (el, tag) => el.play().then(() => L(tag + ': plays'), (e) => L(tag + ': ' + e.name));
   L('loaded · ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, ''));
+  if (location.search.includes('onload')) mic('on load, no gesture');   // asked as soon as the page opens — no click at all
   L('mediaDevices: ' + !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) + ' · requestFullscreen: ' + !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen));
   if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)
     navigator.mediaDevices.enumerateDevices().then((d) => L('audio inputs: ' + d.filter((x) => x.kind === 'audioinput').length));

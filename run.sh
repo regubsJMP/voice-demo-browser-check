@@ -6,7 +6,8 @@
 #   bash run.sh safari | chrome
 set -u
 B="${1:-safari}"; ROOT="$(cd "$(dirname "$0")" && pwd)"; OUT="$ROOT/out/$B"; mkdir -p "$OUT"
-for port in 8001 8002 8003 8004; do (cd "$ROOT/probe" && python3 -m http.server $port >/dev/null 2>&1 &); done
+# bind to 127.0.0.1: listening on all interfaces made macOS ask "Allow Python to find devices on local networks?" over the browser
+for port in 8001 8002 8003 8004 8005; do (cd "$ROOT/probe" && python3 -m http.server --bind 127.0.0.1 $port >/dev/null 2>&1 &); done
 sleep 1
 n=0
 step() { echo "== $(date -u +%H:%M:%S) $*"; }
@@ -21,9 +22,11 @@ front() { open -a "$APP"; sleep 1.5; }
 go() { front; osascript -e 'tell application "System Events" to keystroke "l" using command down'; sleep 0.5; key "localhost:$1/mac.html"
   osascript -e 'tell application "System Events" to key code 36'; sleep 4; }
 allow() { if [ -n "$ALLOW" ]; then click "${ALLOW%,*}" "${ALLOW#*,}"; else echo "   (no Allow coordinates for $B yet — look at the screenshot)"; fi; }
-sleep 12; front; shot open
+sleep 12; front
+step "S0 (8005): microphone asked on page load, before any click — is the prompt shown?"
+shot s0-onload-prompt; allow; sleep 3; shot s0-after-allow; key 3; sleep 3; shot s0-key-fs; esc; sleep 2
 step "S1 (8001): full screen first, then the microphone — is the prompt visible in full screen?"
-key 1; sleep 3; shot s1-fs-then-mic-3s; sleep 6; shot s1-fs-then-mic-9s
+go 8001; key 1; sleep 3; shot s1-fs-then-mic-3s; sleep 6; shot s1-fs-then-mic-9s
 esc; sleep 3; shot s1-after-esc
 allow; sleep 3; shot s1-after-allow
 step "S2 (8002): microphone first, Allow after ~1 s, then full screen (activation window ~5 s)"
