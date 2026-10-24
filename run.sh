@@ -8,7 +8,7 @@ set -u
 B="${1:-safari}"; ROOT="$(cd "$(dirname "$0")" && pwd)"; OUT="$ROOT/out/$B"; mkdir -p "$OUT"
 # bind to 127.0.0.1: listening on all interfaces made macOS ask "Allow Python to find devices on local networks?" over the browser
 # serve.py — static files plus the page's log lines (sendBeacon) → out/<browser>/page-log.txt, printed at the end
-for port in 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8011 8012 8013 8014; do (python3 "$ROOT/serve.py" $port "$ROOT/probe" "$OUT/page-log.txt" >/dev/null 2>&1 &); done
+for port in 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8011 8012 8013 8014 8015; do (python3 "$ROOT/serve.py" $port "$ROOT/probe" "$OUT/page-log.txt" >/dev/null 2>&1 &); done
 sleep 1
 n=0
 step() { echo "== $(date -u +%H:%M:%S) $*"; }
@@ -71,6 +71,12 @@ step "S13 (8013): the demo site's fix (leave full screen first; back, or the nex
 pk 8013 d s13-demofix-cancel esc
 step "S14 (8014): the same, a file chosen"
 pk 8014 d s14-demofix-choose choose
+# «Import leads» — the page button, found by its text on the screen (clicktext)
+imp() { local f="${RUNNER_TEMP:-/tmp}/find.png" xy; screencapture -x "$f"
+  if xy=$("$ROOT/clicktext" "$f" "Import leads"); then cliclick "c:${xy% *},${xy#* }"; echo "   clicked «Import leads» at ${xy}"; else echo "   «Import leads» not found"; fi; }
+step "S15 (8015): «Import leads» button — file chosen (full screen then waits for a click), then «Import leads» AGAIN: does the picker open?"
+go 8015; key 3; sleep 3; imp; sleep 3; shot s15-picker-1; choose; sleep 3.5; shot s15-after-choose
+imp; sleep 3; shot s15-picker-2; esc; sleep 3.5; shot s15-after-cancel; click 700 600; sleep 2; shot s15-after-click; esc; sleep 2
 step "S6 (8006): full screen first, then audio in the same key press (does full screen use up the gesture?)"
 go 8006; key 7; sleep 3; shot s6-fs-then-audio; esc; sleep 2
 step "S7 (8007): audio first, then full screen"
