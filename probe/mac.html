@@ -7,7 +7,10 @@
 <!-- Browser behaviour probe for macOS (Safari, Chrome). Driven by real key presses (System Events): every key below is a user gesture.
      1 — full screen, then microphone (is the permission prompt visible in full screen?)
      2 — microphone, then full screen after the answer (5-second user-activation window)
+     3 — full screen only
      6 — open the file picker (pressed while in full screen: does the picker leave full screen?)
+     After key 2, if full screen did not happen (the answer came after the ~5 s activation window), the NEXT real click or key anywhere
+     enters full screen (the fallback used by the demo).
      5 — audio: play a clip on element A in this key press; 8 s later play another clip on A and on a new element B
      Esc — leave full screen. The page logs everything below, large enough to read on a screenshot. -->
 <style>
@@ -23,7 +26,7 @@
 <body>
 <main>
   <h1>macOS browser probe</h1>
-  <div id="keys">1 — full screen, then mic · 2 — mic, then full screen · 5 — audio elements · 6 — file picker · Esc — exit full screen</div>
+  <div id="keys">1 — full screen, then mic · 2 — mic, then full screen · 3 — full screen · 5 — audio · 6 — file picker · Esc — exit</div>
   <div id="st"></div>
 </main>
 <div id="fsflag">not full screen</div>
@@ -55,9 +58,14 @@
   L('mediaDevices: ' + !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) + ' · requestFullscreen: ' + !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen));
   if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)
     navigator.mediaDevices.enumerateDevices().then((d) => L('audio inputs: ' + d.filter((x) => x.kind === 'audioinput').length));
+  let fsWanted = false;
+  const nextGesture = (what) => { if (!fsWanted) return; fsWanted = false; L('next real ' + what + ' → full screen'); fs('next-' + what); };
+  document.addEventListener('pointerdown', () => { L('pointerdown'); nextGesture('click'); }, true);
   document.addEventListener('keydown', (e) => {
+    if (!['1', '2', '3', '5', '6', 'Escape'].includes(e.key)) nextGesture('key');
     if (e.key === '1') { L('key 1'); fs('1').then(() => mic('1')); }
-    else if (e.key === '2') { L('key 2'); mic('2').then(() => fs('2')); }
+    else if (e.key === '2') { L('key 2'); mic('2').then(() => fs('2')).then(() => { if (!isFs()) { fsWanted = true; L('2: full screen waits for the next real click or key'); } }); }
+    else if (e.key === '3') { L('key 3'); fs('3'); }
     else if (e.key === '5') { L('key 5'); A.src = beep(660); play(A, '5 element A, in key press');
       setTimeout(() => { A.src = beep(880); play(A, '5 element A, new clip 8 s later'); play(new Audio(beep(440)), '5 NEW element B, 8 s later'); }, 8000); }
     else if (e.key === '6') { L('key 6: file picker, full screen ' + isFs()); document.getElementById('f').click(); }

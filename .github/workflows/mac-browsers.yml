@@ -21,13 +21,12 @@ jobs:
           "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --version 2>/dev/null || echo "no Chrome"
           system_profiler SPDisplaysDataType 2>/dev/null | grep -iE "resolution|looks like" || true
           system_profiler SPAudioDataType 2>/dev/null | grep -iE "input|output|default" || true
-      - name: Virtual microphone (BlackHole 2ch)
-        run: |
-          brew install --cask blackhole-2ch || echo "BlackHole install failed"
+XX
           sudo killall coreaudiod || true
           sleep 4
           system_profiler SPAudioDataType 2>/dev/null | grep -iE "blackhole|input" || true
       - name: Probe
+        timeout-minutes: 10
         run: bash run.sh ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: always()
