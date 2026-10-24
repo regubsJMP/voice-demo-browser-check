@@ -21,7 +21,10 @@ jobs:
           "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --version 2>/dev/null || echo "no Chrome"
           system_profiler SPDisplaysDataType 2>/dev/null | grep -iE "resolution|looks like" || true
           system_profiler SPAudioDataType 2>/dev/null | grep -iE "input|output|default" || true
-XX
+      - name: Virtual microphone (BlackHole 2ch) and cliclick
+        run: |
+          brew install cliclick || echo "cliclick install failed"
+          brew install --cask blackhole-2ch || echo "BlackHole install failed"
           sudo killall coreaudiod || true
           sleep 4
           system_profiler SPAudioDataType 2>/dev/null | grep -iE "blackhole|input" || true
