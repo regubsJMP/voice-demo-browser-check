@@ -7,7 +7,8 @@
 set -u
 B="${1:-safari}"; ROOT="$(cd "$(dirname "$0")" && pwd)"; OUT="$ROOT/out/$B"; mkdir -p "$OUT"
 # bind to 127.0.0.1: listening on all interfaces made macOS ask "Allow Python to find devices on local networks?" over the browser
-for port in 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8011 8012; do (cd "$ROOT/probe" && python3 -m http.server --bind 127.0.0.1 $port >/dev/null 2>&1 &); done
+# serve.py — static files plus the page's log lines (sendBeacon) → out/<browser>/page-log.txt, printed at the end
+for port in 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8011 8012; do (python3 "$ROOT/serve.py" $port "$ROOT/probe" "$OUT/page-log.txt" >/dev/null 2>&1 &); done
 sleep 1
 n=0
 step() { echo "== $(date -u +%H:%M:%S) $*"; }
@@ -74,3 +75,4 @@ go 8004
 step "S5 (8004): audio elements"
 key 5; sleep 10; shot s5-audio
 step "done: $n screenshots in $OUT"
+echo "== page log (every line the probe page wrote, port first)"; cat "$OUT/page-log.txt" 2>/dev/null || echo "   (no page log)"

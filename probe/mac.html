@@ -38,7 +38,10 @@
 <input type="file" id="f" hidden>
 <script>
   const st = document.getElementById('st'), t0 = performance.now(), log = [];
-  const L = (m) => { log.push(((performance.now() - t0) / 1000).toFixed(1).padStart(5) + ' s  ' + m); st.textContent = log.slice(-18).join('\n'); document.title = 'probe ' + m; };
+  // newest line first (run 9: the last lines were below the window on screenshots); every line also goes to the server (serve.py → page-log.txt)
+  const L = (m) => { const line = ((performance.now() - t0) / 1000).toFixed(1).padStart(5) + ' s  ' + m; log.push(line);
+    st.textContent = log.slice(-18).reverse().join('\n'); document.title = 'probe ' + m;
+    try { navigator.sendBeacon('/log', line); } catch (e) { /* no server — screenshots only */ } };
   const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
   const flag = () => { const f = document.getElementById('fsflag'); f.textContent = isFs() ? 'FULL SCREEN' : 'not full screen'; f.classList.toggle('on', isFs()); };
   document.addEventListener('fullscreenchange', () => { L('fullscreenchange → ' + isFs()); flag(); });
