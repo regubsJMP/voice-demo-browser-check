@@ -31,7 +31,6 @@ jobs:
         env:
           ARTIFACT_PASS: ${{ secrets.ARTIFACT_PASS }}
         run: |
-          rm -f out/.find.png
           openssl version
           tar czf - out | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:ARTIFACT_PASS -out shots-${{ matrix.browser }}.enc \
             && echo "kdf: pbkdf2 200000" \

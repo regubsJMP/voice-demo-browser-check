@@ -12,7 +12,7 @@ shot() { n=$((n + 1)); screencapture -x "$OUT/$(printf %02d $n)-$1.png" && echo 
 key() { osascript -e "tell application \"System Events\" to keystroke \"$1\"" >/dev/null || echo "   keystroke failed"; }
 keycode() { osascript -e "tell application \"System Events\" to key code $1" >/dev/null; }
 # click the centre of a text on the screen (real mouse); prints only the label, never the text of the page
-clickt() { local f="$ROOT/out/.find.png" xy; screencapture -x "$f"; xy=$("$ROOT/clicktext" "$f" "$1") \
+clickt() { local f="${RUNNER_TEMP:-/tmp}/find.png" xy; screencapture -x "$f"; xy=$("$ROOT/clicktext" "$f" "$1") \
   && { cliclick "c:${xy% *},${xy#* }"; echo "   clicked: $2"; return 0; } || { echo "   not found: $2"; return 1; }; }
 step "launch $B"
 if [ "$B" = safari ]; then APP=Safari; open -a Safari "$SITE_URL/login"

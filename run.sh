@@ -28,9 +28,9 @@ front() { open -a "$APP"; sleep 1.5; }
 go() { front; osascript -e 'tell application "System Events" to keystroke "l" using command down'; sleep 0.5; key "localhost:$1/mac.html"
   osascript -e 'tell application "System Events" to key code 36'; sleep 4; }
 # «Allow» — found by its text on the screen (clicktext, Vision OCR); fixed coordinates only as a fallback
-allow() { local f="$ROOT/out/.find.png" xy lab; [ "$B" = safari ] && lab="Allow" || lab="Allow this time"; screencapture -x "$f"
-  if xy=$("$ROOT/clicktext" "$f" "$lab"); then cliclick "c:${xy% *},${xy#* }"; echo "   clicked «$lab» at $xy (found by text)"
-  elif [ -n "$ALLOW" ]; then click "${ALLOW%,*}" "${ALLOW#*,}"; echo "   clicked fixed $ALLOW"; else echo "   «$lab» not found"; fi; }
+allow() { local f="${RUNNER_TEMP:-/tmp}/find.png" xy lab; [ "$B" = safari ] && lab="Allow" || lab="Allow this time"; screencapture -x "$f"
+  if xy=$("$ROOT/clicktext" "$f" "$lab"); then cliclick "c:${xy% *},${xy#* }"; echo "   clicked «${lab}» at ${xy} (found by text)"
+  elif [ -n "$ALLOW" ]; then click "${ALLOW%,*}" "${ALLOW#*,}"; echo "   clicked fixed $ALLOW"; else echo "   «${lab}» not found"; fi; }
 sleep 12; front
 step "S0 (8005): microphone asked on page load, before any click — is the prompt shown?"
 shot s0-onload-prompt; allow; sleep 3; shot s0-after-allow; key 3; sleep 3; shot s0-key-fs; esc; sleep 2

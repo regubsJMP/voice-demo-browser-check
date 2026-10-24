@@ -36,6 +36,4 @@ jobs:
         if: always()
         with:
           name: shots-${{ matrix.browser }}
-          path: |
-            out/
-            !out/.find.png
+          path: out/
