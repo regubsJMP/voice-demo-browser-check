@@ -1,0 +1,36 @@
+name: mac-browsers
+# Real Safari and Chrome on a fresh macOS VM per run: permission prompts, full screen, audio, file picker — see run.sh.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [safari, chrome]
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Environment
+        run: |
+          sw_vers
+          echo "Safari $(defaults read /Applications/Safari.app/Contents/Info CFBundleShortVersionString 2>/dev/null)"
+          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --version 2>/dev/null || echo "no Chrome"
+          system_profiler SPDisplaysDataType 2>/dev/null | grep -iE "resolution|looks like" || true
+          system_profiler SPAudioDataType 2>/dev/null | grep -iE "input|output|default" || true
+      - name: Virtual microphone (BlackHole 2ch)
+        run: |
+          brew install --cask blackhole-2ch || echo "BlackHole install failed"
+          sudo killall coreaudiod || true
+          sleep 4
+          system_profiler SPAudioDataType 2>/dev/null | grep -iE "blackhole|input" || true
+      - name: Probe
+        run: bash run.sh ${{ matrix.browser }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shots-${{ matrix.browser }}
+          path: out/
