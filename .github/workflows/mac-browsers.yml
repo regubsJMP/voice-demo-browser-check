@@ -28,6 +28,7 @@ jobs:
           sudo killall coreaudiod || true
           sleep 4
           system_profiler SPAudioDataType 2>/dev/null | grep -iE "blackhole|input" || true
+          swiftc -O clicktext.swift -o clicktext
       - name: Probe
         timeout-minutes: 10
         run: bash run.sh ${{ matrix.browser }}
@@ -35,4 +36,6 @@ jobs:
         if: always()
         with:
           name: shots-${{ matrix.browser }}
-          path: out/
+          path: |
+            out/
+            !out/.find.png
