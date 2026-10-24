@@ -78,12 +78,14 @@ step "S15 (8015): «Import leads» button — file chosen (full screen then wait
 go 8015; key 3; sleep 3; imp; sleep 3; shot s15-picker-1; choose; sleep 3.5; shot s15-after-choose
 imp; sleep 3; shot s15-picker-2; esc; sleep 3.5; shot s15-after-cancel; click 700 600; sleep 2; shot s15-after-click; esc; sleep 2
 # browser zoom: Cmd + = (zoom in), Cmd + 0 (actual size) — the page logs the window size and the CSS zoom behaviour on every resize
-zin() { osascript -e 'tell application "System Events" to keystroke "=" using command down' || echo "   zoom-in failed"; }
+# run 14: keystroke "=" with Cmd did not zoom in either browser — the View menu item is clicked instead (key code 24 as a fallback)
+zin() { osascript -e "tell application \"System Events\" to tell process \"$PROC\" to click menu item \"Zoom In\" of menu \"View\" of menu bar 1" >/dev/null   || { echo "   menu Zoom In failed — key code 24"; osascript -e 'tell application "System Events" to key code 24 using command down'; }; }
+zreset() { osascript -e "tell application \"System Events\" to tell process \"$PROC\" to click menu item \"Actual Size\" of menu \"View\" of menu bar 1" >/dev/null   || osascript -e 'tell application "System Events" to keystroke "0" using command down'; }
 step "SZ (8016): browser zoom and CSS zoom — units, container queries, coordinates (zoom.html), then Cmd + three times"
 front; osascript -e 'tell application "System Events" to keystroke "l" using command down'; sleep 0.5; key "localhost:8016/zoom.html"
 osascript -e 'tell application "System Events" to key code 36'; sleep 4; shot sz-100
 zin; sleep 2; shot sz-in1; zin; sleep 2; shot sz-in2; zin; sleep 2; shot sz-in3
-osascript -e 'tell application "System Events" to keystroke "0" using command down'; sleep 2; shot sz-reset
+zreset; sleep 2; shot sz-reset
 step "S6 (8006): full screen first, then audio in the same key press (does full screen use up the gesture?)"
 go 8006; key 7; sleep 3; shot s6-fs-then-audio; esc; sleep 2
 step "S7 (8007): audio first, then full screen"
