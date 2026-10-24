@@ -2,7 +2,7 @@
 # Runs on a GitHub macOS runner: opens probe/mac.html in Safari or Chrome (normal launch, no WebDriver — WebDriver sessions
 # auto-grant the microphone and never show the prompt), presses keys and clicks through System Events / cliclick (real input =
 # user gestures) and takes full-screen screenshots, so the browser's own UI (permission prompts, full screen) is visible.
-# Every scenario runs on its own origin (ports 8001…8004) — a fresh permission state, like a first visit.
+# Every scenario runs on its own origin (ports 8001…8005) — a fresh permission state, like a first visit.
 #   bash run.sh safari | chrome
 set -u
 B="${1:-safari}"; ROOT="$(cd "$(dirname "$0")" && pwd)"; OUT="$ROOT/out/$B"; mkdir -p "$OUT"
@@ -15,9 +15,13 @@ shot() { n=$((n + 1)); screencapture -x "$OUT/$(printf %02d $n)-$1.png" && echo 
 key() { osascript -e "tell application \"System Events\" to keystroke \"$1\"" || echo "   keystroke $1 failed"; }
 esc() { osascript -e 'tell application "System Events" to key code 53' || echo "   esc failed"; }
 click() { cliclick "c:$1,$2" || echo "   click $1,$2 failed"; }
-if [ "$B" = safari ]; then APP=Safari; ALLOW="512,381"; open -a Safari "http://localhost:8001/mac.html"
-else APP="Google Chrome"; ALLOW=""; open -na "Google Chrome" --args --user-data-dir=/tmp/chrome-probe --no-first-run --no-default-browser-check \
-  "http://localhost:8001/mac.html"; fi
+FIRST="http://localhost:8005/mac.html?onload"
+step "launch $B"
+if [ "$B" = safari ]; then APP=Safari; ALLOW="512,381"; open -a Safari "$FIRST"
+else APP="Google Chrome"; ALLOW=""   # «open -na "Google Chrome" --args …» hung the whole step for 10 min (run 2) — start the binary directly
+  nohup "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --user-data-dir=/tmp/chrome-probe --no-first-run \
+    --no-default-browser-check "$FIRST" >/dev/null 2>&1 &
+fi
 front() { open -a "$APP"; sleep 1.5; }
 go() { front; osascript -e 'tell application "System Events" to keystroke "l" using command down'; sleep 0.5; key "localhost:$1/mac.html"
   osascript -e 'tell application "System Events" to key code 36'; sleep 4; }
