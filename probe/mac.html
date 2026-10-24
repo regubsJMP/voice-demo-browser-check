@@ -67,7 +67,7 @@
     return URL.createObjectURL(new Blob([b.buffer], { type: 'audio/wav' })); }
   const A = new Audio();
   const play = (el, tag) => el.play().then(() => L(tag + ': plays'), (e) => L(tag + ': ' + e.name));
-  L('loaded · ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, ''));
+  L('loaded ' + location.search + ' · ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, ''));
   if (location.search.includes('onload')) mic('on load, no gesture');   // asked as soon as the page opens — no click at all
   L('mediaDevices: ' + !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) + ' · requestFullscreen: ' + !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen));
   if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)
@@ -92,7 +92,8 @@
     else if (e.key === '9' || e.key === '0' || e.key === '4' || e.key === 'd') {
       pick = { way: { 9: 'site', 0: 'exit-first', 4: 're-enter', d: 'demo fix' }[e.key], was: isFs() };
       L('key ' + e.key + ': file picker (' + pick.way + '), full screen ' + pick.was);
-      if ((e.key === '0' || e.key === 'd') && pick.was) { const x = document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen();
+      // the site's rule since 24.10: Firefox keeps full screen through the file picker — no leaving first there
+      if ((e.key === '0' || (e.key === 'd' && !/\bFirefox\//.test(navigator.userAgent))) && pick.was) { const x = document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen();
         Promise.resolve(x).then(() => L('0: left full screen'), (er) => L('0: exitFullscreen ' + er.name)); }
       const f = document.getElementById('f'); f.value = ''; f.click();
     }
@@ -102,7 +103,7 @@
     const pending = fsWanted; fsWanted = false;
     pick = { way: 'demo fix', was: isFs() || pending };
     L('button: file picker (demo fix), full screen ' + isFs() + ', pending ' + pending);
-    if (isFs()) { const x = document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen();
+    if (isFs() && !/\bFirefox\//.test(navigator.userAgent)) { const x = document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen();
       Promise.resolve(x).then(() => L('button: left full screen'), (er) => L('button: exitFullscreen ' + er.name)); }
     const f = document.getElementById('f'); f.value = ''; f.click();
   });
