@@ -11,14 +11,16 @@ for port in 8001 8002 8003 8004 8005 8006 8007; do (cd "$ROOT/probe" && python3 
 sleep 1
 n=0
 step() { echo "== $(date -u +%H:%M:%S) $*"; }
-shot() { n=$((n + 1)); screencapture -x "$OUT/$(printf %02d $n)-$1.png" && echo "   shot $n: $1"; }
+# the page puts its last three log lines into the tab title — print it next to every screenshot (readable even under a system dialog)
+wtitle() { osascript -e "tell application \"System Events\" to get name of front window of process \"$PROC\"" 2>/dev/null; }
+shot() { n=$((n + 1)); screencapture -x "$OUT/$(printf %02d $n)-$1.png" && echo "   shot $n: $1 | $(wtitle)"; }
 key() { osascript -e "tell application \"System Events\" to keystroke \"$1\"" || echo "   keystroke $1 failed"; }
 esc() { osascript -e 'tell application "System Events" to key code 53' || echo "   esc failed"; }
 click() { cliclick "c:$1,$2" || echo "   click $1,$2 failed"; }
 FIRST="http://localhost:8005/mac.html?onload"
 step "launch $B"
-if [ "$B" = safari ]; then APP=Safari; ALLOW="512,381"; open -a Safari "$FIRST"
-else APP="Google Chrome"; ALLOW=""   # «open -na "Google Chrome" --args …» hung the whole step for 10 min (run 2) — start the binary directly
+if [ "$B" = safari ]; then APP=Safari; PROC=Safari; ALLOW="512,381"; open -a Safari "$FIRST"
+else APP="Google Chrome"; PROC="Google Chrome"; ALLOW=""   # «open -na "Google Chrome" --args …» hung the whole step for 10 min (run 2) — start the binary directly
   nohup "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --user-data-dir=/tmp/chrome-probe --no-first-run \
     --no-default-browser-check "$FIRST" >/dev/null 2>&1 &
 fi
