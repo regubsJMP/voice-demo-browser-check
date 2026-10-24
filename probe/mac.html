@@ -63,10 +63,16 @@
   const nextGesture = (what) => { if (!fsWanted) return; fsWanted = false; L('next real ' + what + ' → full screen'); fs('next-' + what); };
   document.addEventListener('pointerdown', () => { L('pointerdown'); nextGesture('click'); }, true);
   document.addEventListener('keydown', (e) => {
-    if (!['1', '2', '3', '5', '6', 'Escape'].includes(e.key)) nextGesture('key');
+    if (!['1', '2', '3', '5', '6', '7', '8', 'Escape'].includes(e.key)) nextGesture('key');
     if (e.key === '1') { L('key 1'); fs('1').then(() => mic('1')); }
     else if (e.key === '2') { L('key 2'); mic('2').then(() => fs('2')).then(() => { if (!isFs()) { fsWanted = true; L('2: full screen waits for the next real click or key'); } }); }
     else if (e.key === '3') { L('key 3'); fs('3'); }
+    // 7 / 8 — does requestFullscreen() use up the key press for audio? 7: full screen FIRST, then a new <audio> and a new AudioContext;
+    // 8: audio first, then full screen
+    else if (e.key === '7') { L('key 7'); fs('7'); const c = new (window.AudioContext || window.webkitAudioContext)();
+      c.resume().then(() => L('7 AudioContext after full screen: ' + c.state), (x) => L('7 AudioContext ' + x.name)); play(new Audio(beep(500)), '7 <audio> after full screen'); }
+    else if (e.key === '8') { L('key 8'); const c = new (window.AudioContext || window.webkitAudioContext)();
+      c.resume().then(() => L('8 AudioContext before full screen: ' + c.state), (x) => L('8 AudioContext ' + x.name)); play(new Audio(beep(520)), '8 <audio> before full screen'); fs('8'); }
     else if (e.key === '5') { L('key 5'); A.src = beep(660); play(A, '5 element A, in key press');
       setTimeout(() => { A.src = beep(880); play(A, '5 element A, new clip 8 s later'); play(new Audio(beep(440)), '5 NEW element B, 8 s later'); }, 8000); }
     else if (e.key === '6') { L('key 6: file picker, full screen ' + isFs()); document.getElementById('f').click(); }

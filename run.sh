@@ -7,7 +7,7 @@
 set -u
 B="${1:-safari}"; ROOT="$(cd "$(dirname "$0")" && pwd)"; OUT="$ROOT/out/$B"; mkdir -p "$OUT"
 # bind to 127.0.0.1: listening on all interfaces made macOS ask "Allow Python to find devices on local networks?" over the browser
-for port in 8001 8002 8003 8004 8005; do (cd "$ROOT/probe" && python3 -m http.server --bind 127.0.0.1 $port >/dev/null 2>&1 &); done
+for port in 8001 8002 8003 8004 8005 8006 8007; do (cd "$ROOT/probe" && python3 -m http.server --bind 127.0.0.1 $port >/dev/null 2>&1 &); done
 sleep 1
 n=0
 step() { echo "== $(date -u +%H:%M:%S) $*"; }
@@ -39,6 +39,11 @@ step "S3 (8003): microphone first, Allow after ~7 s (too late for full screen), 
 go 8003; key 2; sleep 7; shot s3-prompt-7s; allow; sleep 3; shot s3-after-allow-7s; click 700 600; sleep 3; shot s3-after-next-click; esc; sleep 2
 step "S4 (8004): file picker while in full screen"
 go 8004; key 3; sleep 3; shot s4-fullscreen; key 6; sleep 3; shot s4-picker; esc; sleep 2; shot s4-after-esc
+step "S6 (8006): full screen first, then audio in the same key press (does full screen use up the gesture?)"
+go 8006; key 7; sleep 3; shot s6-fs-then-audio; esc; sleep 2
+step "S7 (8007): audio first, then full screen"
+go 8007; key 8; sleep 3; shot s7-audio-then-fs; esc; sleep 2
+go 8004
 step "S5 (8004): audio elements"
 key 5; sleep 10; shot s5-audio
 step "done: $n screenshots in $OUT"
