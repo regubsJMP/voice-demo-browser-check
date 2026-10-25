@@ -37,8 +37,8 @@ clickt "Start the simplified demo" "Simplified demo tile"; sleep 4; shot simple-
 # 25.10: console tile in full screen → «Import leads» opens the in-page file list (no system file window, which takes Chrome out of
 # full screen) → a sample file → rows; then «Browse your computer…» (system window) → cancel → is full screen back, or after a click?
 # Whether the page is in full screen is read from the screen: the browser's address bar (domain text) is hidden in full screen.
-fs_state() { local f="${RUNNER_TEMP:-/tmp}/fs.png"; screencapture -x "$f"
-  if "$ROOT/clicktext" "$f" "vrp-voice" >/dev/null 2>&1; then echo "   $1: address bar visible — NOT full screen"; else echo "   $1: address bar hidden — full screen"; fi; }
+fs_state() { local f="${RUNNER_TEMP:-/tmp}/fs.png" host="${SITE_URL#*//}"; host="${host%%.*}"; screencapture -x "$f"   # host: from the secret, never printed
+  if "$ROOT/clicktext" "$f" "$host" >/dev/null 2>&1; then echo "   $1: address bar visible — NOT full screen"; else echo "   $1: address bar hidden — full screen"; fi; }
 step "All demos → console tile (full screen)"
 keycode 53; sleep 2; clickt "All demos" "All demos"; sleep 5
 clickt "Open the console" "Console tile"; sleep 5; shot console; fs_state "console opened"
