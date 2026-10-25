@@ -34,6 +34,8 @@ if [ "$B" = safari ]; then clickt "Allow" "Allow (Safari prompt)"; else clickt "
 sleep 3; shot menu-after-allow
 # 25.10: one button, three states — «Turn on the voice guide» (the browser blocked the voice), «Mute voice guide» (the voice started
 # by itself; pulses while it speaks), «Unmute voice guide» (muted by the person)
+# Safari shows its save-password sheet late (after the first «Not Now» try, site run 4) — it blocks the page until closed
+[ "$B" = safari ] && { clickt "Not Now" "Safari: save password — Not Now (late sheet)"; sleep 1.5; }
 step "voice guide button: Turn on (blocked) or Mute → Unmute (voice started by itself)"
 if clickt "Turn on the voice guide" "Turn on the voice guide (voice was blocked)"; then sleep 3; shot menu-after-voice-button
   clickt "Mute voice guide" "Mute voice guide (after turning on)" && { sleep 1.5; shot menu-muted; clickt "Unmute voice guide" "Unmute voice guide" && { sleep 3; shot menu-unmuted; }; }
