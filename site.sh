@@ -24,7 +24,11 @@ sleep 12; open -a "$APP"; sleep 2; shot login
 step "log in (keyboard into the form)"
 clickt "username" "username field" || clickt "login" "username field"
 key "$DEMO_USER"; keycode 48; key "$DEMO_PASS"; keycode 36
-sleep 6; shot menu-mic-prompt
+sleep 6
+# a new address (e.g. a version preview) makes both browsers offer to save the password — the dialog covers the page and takes clicks
+# (site run 3, 25.10): close it first
+if [ "$B" = safari ]; then clickt "Not Now" "Safari: save password — Not Now"; else clickt "No Thanks" "Chrome: save password — No Thanks"; fi; sleep 1.5
+shot menu-mic-prompt
 step "browser microphone prompt on the tile page (before any click) → Allow"
 if [ "$B" = safari ]; then clickt "Allow" "Allow (Safari prompt)"; else clickt "Allow this time" "Allow this time (Chrome prompt)"; fi
 sleep 3; shot menu-after-allow
