@@ -39,7 +39,9 @@ clickt "Start the simplified demo" "Simplified demo tile"; sleep 4; shot simple-
 # full screen) → a sample file → rows; then «Browse your computer…» (system window) → cancel → is full screen back, or after a click?
 # Whether the page is in full screen is read from the screen: the browser's address bar (domain text) is hidden in full screen.
 fs_state() { local f="${RUNNER_TEMP:-/tmp}/fs.png" host="${SITE_URL#*//}"; host="${host%%.*}"; screencapture -x "$f"   # host: from the secret, never printed
-  if "$ROOT/clicktext" "$f" "$host" >/dev/null 2>&1; then echo "   $1: address bar visible — NOT full screen"; else echo "   $1: address bar hidden — full screen"; fi; }
+  # entering full screen Chrome shows a bubble «<host> – To exit full screen, press esc» — it carries the host too (site run 2, 25.10)
+  if "$ROOT/clicktext" "$f" "exit full screen" >/dev/null 2>&1; then echo "   $1: full-screen bubble — full screen"
+  elif "$ROOT/clicktext" "$f" "$host" >/dev/null 2>&1; then echo "   $1: address bar visible — NOT full screen"; else echo "   $1: address bar hidden — full screen"; fi; }
 clickt "Don't Allow" "macOS local-network prompt dismissed" && sleep 1   # if a system prompt still covers the page
 step "All demos → console tile (full screen)"
 keycode 53; sleep 2; clickt "All demos" "All demos"; sleep 5
