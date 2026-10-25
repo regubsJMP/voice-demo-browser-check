@@ -3,6 +3,11 @@ name: mac-site
 # login are repository secrets; screenshots are uploaded only as an encrypted archive.
 on:
   workflow_dispatch:
+    inputs:
+      preview:
+        description: 'Cloudflare version preview prefix (8 hex): test that version before it goes live; empty: the live site'
+        required: false
+        default: ''
 jobs:
   site:
     strategy:
@@ -22,10 +27,17 @@ jobs:
       - name: Site, first visit
         timeout-minutes: 10
         env:
-          SITE_URL: ${{ secrets.SITE_URL }}
+          SITE_URL_LIVE: ${{ secrets.SITE_URL }}
+          PREVIEW: ${{ inputs.preview }}
           DEMO_USER: ${{ secrets.DEMO_USER }}
           DEMO_PASS: ${{ secrets.DEMO_PASS }}
-        run: bash site.sh ${{ matrix.browser }}
+        run: |
+          # preview: the address is built from the secret here and masked — the public log never shows it
+          if [ -n "$PREVIEW" ]; then case "$PREVIEW" in *[!0-9a-f]*) echo "preview must be hex"; exit 1;; esac
+            h="${SITE_URL_LIVE#*//}"; SITE_URL="https://${PREVIEW}-${h}"; echo "site: preview version"
+          else SITE_URL="$SITE_URL_LIVE"; echo "site: live"; fi
+          echo "::add-mask::$SITE_URL"; export SITE_URL
+          bash site.sh ${{ matrix.browser }}
       - name: Encrypt screenshots
         if: always()
         env:

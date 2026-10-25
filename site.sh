@@ -28,8 +28,14 @@ sleep 6; shot menu-mic-prompt
 step "browser microphone prompt on the tile page (before any click) → Allow"
 if [ "$B" = safari ]; then clickt "Allow" "Allow (Safari prompt)"; else clickt "Allow this time" "Allow this time (Chrome prompt)"; fi
 sleep 3; shot menu-after-allow
-step "voice guide button (only where the browser blocked the voice)"
-clickt "Turn on the voice guide" "voice guide button" && { sleep 3; shot menu-after-voice-button; }
+# 25.10: one button, three states — «Turn on the voice guide» (the browser blocked the voice), «Mute voice guide» (the voice started
+# by itself; pulses while it speaks), «Unmute voice guide» (muted by the person)
+step "voice guide button: Turn on (blocked) or Mute → Unmute (voice started by itself)"
+if clickt "Turn on the voice guide" "Turn on the voice guide (voice was blocked)"; then sleep 3; shot menu-after-voice-button
+  clickt "Mute voice guide" "Mute voice guide (after turning on)" && { sleep 1.5; shot menu-muted; clickt "Unmute voice guide" "Unmute voice guide" && { sleep 3; shot menu-unmuted; }; }
+elif clickt "Mute voice guide" "Mute voice guide (voice started by itself)"; then sleep 1.5; shot menu-muted
+  clickt "Unmute voice guide" "Unmute voice guide" && { sleep 3; shot menu-unmuted; }
+fi
 step "tile: Full demo → full screen + intro voice, no second prompt"
 clickt "Start the full demo" "Full demo tile"; sleep 4; shot full-intro; sleep 6; shot full-intro-10s
 step "All demos → tiles → Simplified demo"
