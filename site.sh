@@ -17,7 +17,8 @@ clickt() { local f="${RUNNER_TEMP:-/tmp}/find.png" xy; screencapture -x "$f"; xy
 step "launch $B"
 if [ "$B" = safari ]; then APP=Safari; open -a Safari "$SITE_URL/login"
 else APP="Google Chrome"; nohup "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --user-data-dir=/tmp/chrome-site --no-first-run \
-  --no-default-browser-check "$SITE_URL/login" >/dev/null 2>&1 &
+  --no-default-browser-check --disable-features=MediaRouter,DialMediaRouteProvider "$SITE_URL/login" >/dev/null 2>&1 &
+  # MediaRouter off (25.10, site run 1): Chrome's cast discovery raised macOS «Allow … to find devices on local networks?» over the page
 fi
 sleep 12; open -a "$APP"; sleep 2; shot login
 step "log in (keyboard into the form)"
@@ -39,6 +40,7 @@ clickt "Start the simplified demo" "Simplified demo tile"; sleep 4; shot simple-
 # Whether the page is in full screen is read from the screen: the browser's address bar (domain text) is hidden in full screen.
 fs_state() { local f="${RUNNER_TEMP:-/tmp}/fs.png" host="${SITE_URL#*//}"; host="${host%%.*}"; screencapture -x "$f"   # host: from the secret, never printed
   if "$ROOT/clicktext" "$f" "$host" >/dev/null 2>&1; then echo "   $1: address bar visible — NOT full screen"; else echo "   $1: address bar hidden — full screen"; fi; }
+clickt "Don't Allow" "macOS local-network prompt dismissed" && sleep 1   # if a system prompt still covers the page
 step "All demos → console tile (full screen)"
 keycode 53; sleep 2; clickt "All demos" "All demos"; sleep 5
 clickt "Open the console" "Console tile"; sleep 5; shot console; fs_state "console opened"
