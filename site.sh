@@ -14,6 +14,11 @@ keycode() { osascript -e "tell application \"System Events\" to key code $1" >/d
 # click the centre of a text on the screen (real mouse); prints only the label, never the text of the page
 clickt() { local f="${RUNNER_TEMP:-/tmp}/find.png" xy; screencapture -x "$f"; xy=$("$ROOT/clicktext" "$f" "$1") \
   && { cliclick "c:${xy% *},${xy#* }"; echo "   clicked: $2"; return 0; } || { echo "   not found: $2"; return 1; }; }
+# macOS asks «Allow "hosted-compute-" to find devices on local networks?» for the runner's own agent at random moments (site runs 1, 4) —
+# it sits on top of everything and takes clicks; close it before each step (no-op when it is not there)
+sysd() { local f="${RUNNER_TEMP:-/tmp}/sysd.png" xy; screencapture -x "$f"
+  xy=$("$ROOT/clicktext" "$f" "Don't Allow" 2>/dev/null) && { cliclick "c:${xy% *},${xy#* }"; echo "   (macOS local-network prompt closed)"; sleep 1; } || true; }
+step() { sysd; echo "== $(date -u +%H:%M:%S) $*"; }
 step "launch $B"
 if [ "$B" = safari ]; then APP=Safari; open -a Safari "$SITE_URL/login"
 else APP="Google Chrome"; nohup "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --user-data-dir=/tmp/chrome-site --no-first-run \
